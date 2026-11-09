@@ -22,6 +22,11 @@ git remote add origin https://github.com/TU_USUARIO/sonder.git
 git push -u origin main
 ```
 
+## Instalarla como app
+
+En el celular, al abrir el enlace en Chrome: menú **⋮ → Instalar app** (o *Agregar a la pantalla principal*). En iPhone: Safari → **Compartir → Agregar a pantalla de inicio**. También hay un botón en *Configuración → App*.
+Queda con su ícono, se abre a pantalla completa y funciona sin internet. Si actualizas archivos en GitHub, la app instalada toma la versión nueva la próxima vez que se abra con internet.
+
 ## Probarla antes de regalarla
 
 Abre el enlace con `?dev` al final (por ejemplo `https://TU_USUARIO.github.io/sonder/?dev`).
@@ -48,3 +53,4 @@ Cada vez que ella entra a un planeta y abre una de sus discusiones, se enciende 
 | Cuentas, publicaciones y mensajes directos | `data/accounts.js` |
 | Temas detectados y respuestas | `data/responses.js` |
 | Colores y tipografías | `styles/main.css` (variables al inicio) |
+| Nombre e ícono de la app | `manifest.webmanifest` y `assets/icons/` |

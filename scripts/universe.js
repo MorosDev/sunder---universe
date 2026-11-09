@@ -21,7 +21,8 @@
   };
   const rng = (seed) => () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   const ease = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
-  const zMin = () => Math.min(W, H) / 4600;
+  const fitZ = () => SU.clamp(Math.min(W, H) / 3100, 0.05, 1);
+  const zMin = () => fitZ() * 0.75;
   const zMax = () => 2.6;
   const toScreen = (wx, wy) => [(wx - U.cam.x) * U.cam.z + W / 2, (wy - U.cam.y) * U.cam.z + H / 2];
   const toWorld = (sx, sy) => [(sx - W / 2) / U.cam.z + U.cam.x, (sy - H / 2) / U.cam.z + U.cam.y];
@@ -293,8 +294,12 @@
     clampCam();
   }
   function clampCam() {
-    U.cam.x = SU.clamp(U.cam.x, -2300, 2300);
-    U.cam.y = SU.clamp(U.cam.y, -2300, 2300);
+    // el centro de la pantalla nunca se aleja más allá del borde de la galaxia
+    // límites de la galaxia (con un margen): la vista nunca se sale de ellos
+    const X0 = -1700, X1 = 1500, Y0 = -1400, Y1 = 1400;
+    const hw = W / 2 / U.cam.z, hh = H / 2 / U.cam.z;
+    U.cam.x = (X1 - X0) / 2 <= hw ? (X0 + X1) / 2 : SU.clamp(U.cam.x, X0 + hw, X1 - hw);
+    U.cam.y = (Y1 - Y0) / 2 <= hh ? (Y0 + Y1) / 2 : SU.clamp(U.cam.y, Y0 + hh, Y1 - hh);
   }
   function animateTo(x, y, z, dur) {
     if (reduce()) { U.cam = { x, y, z }; persist(); return; }
@@ -414,7 +419,14 @@
       persist();
       hideHelpSoon();
     }, { passive: false });
+    const layer = $('#universe');
+    const stop = (e) => { if (U.active && !SU.nav.universeCovered()) e.preventDefault(); };
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach((ev) => document.addEventListener(ev, stop, { passive: false }));
+    layer.addEventListener('touchmove', (e) => { if (e.touches.length > 1 || e.target === cv) stop(e); }, { passive: false });
+    cv.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
     window.addEventListener('resize', () => { if (U.active) resize(); });
+    layer.addEventListener('dblclick', (e) => e.preventDefault());
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', () => { if (U.active) resize(); });
     document.addEventListener('keydown', (e) => {
       if (!U.active || SU.nav.universeCovered()) return;
       if (e.key === '+' || e.key === '=') { zoomAt(W / 2, H / 2, 1.25); persist(); }
@@ -671,6 +683,7 @@
     const saved = S().universe;
     if (saved && isFinite(saved.z)) U.cam = { x: saved.x, y: saved.y, z: SU.clamp(saved.z, zMin(), zMax()) };
     else fit();
+    clampCam();
     renderUI();
     requestAnimationFrame(() => lay.classList.add('in'));
     if (!raf) raf = requestAnimationFrame(frame);

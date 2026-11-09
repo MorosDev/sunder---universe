@@ -356,6 +356,8 @@
       const st = S().settings;
       return `<div class="set-group"><div class="section-title">Perfil</div>
         <button class="set-row" data-act="editProfile">${SU.icon('edit', 'sm')}<span class="grow">Editar perfil</span>${SU.icon('back', 'sm flip')}</button></div>
+        ${SU.isStandalone && !SU.isStandalone() ? `<div class="set-group"><div class="section-title">App</div>
+        <button class="set-row" data-act="installApp">${SU.icon('plusSq', 'sm')}<span class="grow">Agregar a la pantalla de inicio<span class="set-sub">Ábrela como una app, a pantalla completa</span></span>${SU.icon('back', 'sm flip')}</button></div>` : ''}
         <div class="set-group"><div class="section-title">Experiencia</div>
         <label class="set-row">${SU.icon('sparkle', 'sm')}<span class="grow">Efectos ambientales<span class="set-sub">Estrellas que titilan y fugaces en el universo</span></span>
           <input type="checkbox" class="switch" data-setting="ambient" ${st.ambient ? 'checked' : ''}></label>

@@ -5,6 +5,42 @@
   const S = () => SU.store.s;
   const esc = SU.esc;
 
+  /* ----- Instalar como app (PWA) ----- */
+  SU.install = { prompt: null };
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    SU.install.prompt = e;
+    SU.emit('installable');
+  });
+  SU.on('installable', () => {
+    const s = SU.store.s;
+    if (!s || !s.onboarded || s.flags.installTip) return;
+    s.flags.installTip = Date.now(); SU.store.save();
+    setTimeout(() => SU.toast('Tip: puedes agregar sonder. a tu pantalla de inicio desde Configuración.', SU.icon('plusSq', 'sm')), 4000);
+  });
+  window.addEventListener('appinstalled', () => { SU.install.prompt = null; SU.toast('sonder. ya está en tu pantalla de inicio ✨'); });
+  SU.isStandalone = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  SU.actions.installApp = async () => {
+    const p = SU.install.prompt;
+    if (p) {
+      p.prompt();
+      try { await p.userChoice; } catch (e) { /* nada */ }
+      SU.install.prompt = null;
+      return;
+    }
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    SU.modal({
+      title: 'Agregar a tu pantalla',
+      body: ios
+        ? '<p>En Safari toca el botón <b>Compartir</b> (el cuadrito con la flecha) y luego <b>Agregar a pantalla de inicio</b>.</p>'
+        : '<p>En Chrome toca el menú <b>⋮</b> (arriba a la derecha) y luego <b>Instalar app</b> o <b>Agregar a la pantalla principal</b>.</p>'
+    });
+  };
+  function registerSW() {
+    if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+    try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) { /* visor sin service workers */ }
+  }
+
   SU.applySettings = () => {
     document.body.classList.toggle('reduce-motion', !!S().settings.reduceMotion);
   };
@@ -145,6 +181,7 @@
     }, 5000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { SU.sched.tick(); SU.tabs.refresh('time'); } });
 
+    registerSW();
     if (/[?&]dev\b/.test(location.search) || location.hash === '#dev') devPanel();
     if (!SU.store.ok) SU.toast('Este navegador no permite guardar datos. Lo que hagas se perderá al cerrar.');
   }
